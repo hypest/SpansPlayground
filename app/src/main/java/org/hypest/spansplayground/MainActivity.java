@@ -22,11 +22,11 @@ public class MainActivity extends Activity {
 
         mEditText = (EditText) findViewById(R.id.edittext);
 
-        mEditText.setText("Exampletext");
+        mEditText.setText("SuperscriptNormalSubscript");
         mEditText.addTextChangedListener(tw);
 
-        mEditText.getText().setSpan(new SuperscriptSpan(), 0, 7, Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
-        mEditText.getText().setSpan(new SubscriptSpan(), 8, mEditText.getText().length(), Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
+        mEditText.getText().setSpan(new SuperscriptSpan(), 0, 11, Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
+        mEditText.getText().setSpan(new SubscriptSpan(), 17, mEditText.getText().length(), Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
         mEditText.getText().setSpan(new StrikethroughSpan(), 0, mEditText.getText().length(), Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
     }
 

@@ -16,6 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="Hello World!\rline 2"
+        android:fontFamily="sans-serif"
         android:singleLine="false"
         android:inputType="textMultiLine"
         android:gravity="top|left"/>

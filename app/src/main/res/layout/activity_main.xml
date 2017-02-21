@@ -17,6 +17,6 @@
         android:layout_height="match_parent"
         android:text="Hello World!\rline 2"
         android:singleLine="false"
-        android:inputType="textNoSuggestions|textMultiLine"
+        android:inputType="textMultiLine"
         android:gravity="top|left"/>
 </RelativeLayout>

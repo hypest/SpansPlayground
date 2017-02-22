@@ -3,7 +3,6 @@ package org.hypest.spansplayground;
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.BulletSpan;
@@ -12,56 +11,7 @@ import android.widget.EditText;
 
 public class MainActivity extends Activity {
 
-    static char NEWLINE = '\n';
-    static char ZWJ_CHAR = '\u200B';
-
     EditText mEditText;
-
-    static class IgnoreDeletion {}
-
-    TypefaceSpan newList() {
-        return new TypefaceSpan("serif");
-    }
-
-    void newList(Spannable text, int start, int end) {
-        setList(text, newList(), start, end);
-    }
-
-    BulletSpan newListItem() {
-        return new BulletSpan();
-    }
-
-    void newListItem(Spannable text, int start, int end) {
-        setListItem(text, newListItem(), start, end);
-    }
-
-    void setList(Spannable text, TypefaceSpan list, int start, int end) {
-        text.setSpan(list, start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-    }
-
-    void setListItem(Spannable text, BulletSpan listItem, int start, int end) {
-        text.setSpan(listItem, start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-    }
-
-    void insertZwj(Editable text, int position) {
-        text.insert(position, "" + ZWJ_CHAR);
-    }
-
-    void deleteAndIgnore(Editable text, int start, int count) {
-        text.setSpan(new IgnoreDeletion(), start, start + count, Spanned.SPAN_COMPOSING);
-        text.delete(start, start + count);
-    }
-
-    boolean handledDeletionIgnore(Spannable text, Spanned textFragment) {
-        IgnoreDeletion[] allowDeletions = textFragment.getSpans(0, 0, IgnoreDeletion.class);
-        if (allowDeletions != null && allowDeletions.length > 0) {
-            // remove the marking span, it's job is finished.
-            text.removeSpan(allowDeletions[0]);
-            return true;
-        }
-
-        return false;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,47 +23,9 @@ public class MainActivity extends Activity {
         mEditText.setText("b1\nb2");
         mEditText.addTextChangedListener(tw);
 
-        newList(mEditText.getText(), 0, mEditText.length());
-        newListItem(mEditText.getText(), 0, 2);
-        newListItem(mEditText.getText(), 3, 5);
-    }
-
-    static class TextChangedEvent {
-        final private int inputStart;
-        final private Spanned charsOld;
-        final private Spanned charsNew;
-        final boolean gotNewline;
-        final boolean gotNewlineAfterZwj;
-        final char zwjRightNeighbor;
-        final boolean deletedZwj;
-        final boolean deletedNewline;
-
-        TextChangedEvent(Spanned text, int inputStart, Spanned charsOld, Spanned charsNew) {
-            this.inputStart = inputStart;
-            this.charsOld = charsOld;
-            this.charsNew = charsNew;
-
-            gotNewline =
-                    charsNew.length() == 1
-                    && charsNew.charAt(0) == NEWLINE;
-
-            zwjRightNeighbor =
-                    (inputStart > 0
-                    && charsNew.length() > 0
-                    && text.charAt(inputStart - 1) == ZWJ_CHAR) ? charsNew.charAt(0) : 0;
-
-            gotNewlineAfterZwj = zwjRightNeighbor == NEWLINE;
-
-            deletedZwj =
-                    charsOld.length() == 1
-                    && charsNew.length() == 0
-                    && charsOld.charAt(0) == ZWJ_CHAR;
-
-            deletedNewline =
-                    charsOld.length() == 1
-                    && charsNew.length() == 0
-                    && charsOld.charAt(0) == NEWLINE;
-        }
+        SpansHelper.newList(mEditText.getText(), 0, mEditText.length());
+        SpansHelper.newListItem(mEditText.getText(), 0, 2);
+        SpansHelper.newListItem(mEditText.getText(), 3, 5);
     }
 
     TextWatcher tw = new TextWatcher() {
@@ -163,7 +75,7 @@ public class MainActivity extends Activity {
 
         if (event.zwjRightNeighbor != 0) {
             // ZWJ got company after it so, it's no longer needed
-            deleteAndIgnore(text, event.inputStart - 1, 1);
+            SpansHelper.deleteAndIgnore(text, event.inputStart - 1, 1);
             return true;
         }
 
@@ -178,7 +90,7 @@ public class MainActivity extends Activity {
 
             if (itemStart == itemEnd) {
                 // add a ZWJ if bullet empty
-                insertZwj(text, event.inputStart);
+                SpansHelper.insertZwj(text, event.inputStart);
                 return true;
             }
         }
@@ -202,11 +114,11 @@ public class MainActivity extends Activity {
 
         if (newlineIndex == itemStart) {
             // newline added at start of bullet so, push current bullet forward and add a new bullet in place
-            setListItem(text, listItem, newlineIndex + 1, itemEnd);
+            SpansHelper.setListItem(text, listItem, newlineIndex + 1, itemEnd);
 
-            insertZwj(text, newlineIndex);
+            SpansHelper.insertZwj(text, newlineIndex);
 
-            newListItem(text, newlineIndex, newlineIndex + 1);
+            SpansHelper.newListItem(text, newlineIndex, newlineIndex + 1);
             return true;
         }
 
@@ -219,37 +131,37 @@ public class MainActivity extends Activity {
                 text.removeSpan(list);
             } else {
                 // adjust the list end
-                setList(text, list, listStart, newlineIndex - 2);
+                SpansHelper.setList(text, list, listStart, newlineIndex - 2);
             }
 
             // delete the newline and the ZWJ before it
-            deleteAndIgnore(text, newlineIndex - 1, 2);
+            SpansHelper.deleteAndIgnore(text, newlineIndex - 1, 2);
             return true;
         }
 
         if (newlineIndex == itemEnd -1){
             // newline added at the end of the list item so, adjust the leading one to not include the newline and
             //  add append new list item
-            setListItem(text, listItem, itemStart, newlineIndex);
+            SpansHelper.setListItem(text, listItem, itemStart, newlineIndex);
 
             // it's going to be an empty list item so, add a ZWJ to make the bullet render
-            insertZwj(text, newlineIndex + 1);
+            SpansHelper.insertZwj(text, newlineIndex + 1);
 
             // append a new list item span and include the ZWJ in it
-            newListItem(text, newlineIndex + 1, itemEnd + 1);
+            SpansHelper.newListItem(text, newlineIndex + 1, itemEnd + 1);
             return true;
         }
 
         {
             // newline added at some position inside the bullet so, end the current bullet and append a new one
-            setListItem(text, listItem, itemStart, newlineIndex);
-            newListItem(text, newlineIndex + 1, itemEnd);
+            SpansHelper.setListItem(text, listItem, itemStart, newlineIndex);
+            SpansHelper.newListItem(text, newlineIndex + 1, itemEnd);
             return true;
         }
     }
 
     boolean handleZwjDeletionInList(Editable text, int inputStart, Spanned charsOld, Spanned charsNew, TypefaceSpan list) {
-        if (handledDeletionIgnore(text, charsOld)) {
+        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
             // let it go. This ZWJ deletion is deliberate, happening when we're joining a list item with an empty one
             return false;
         }
@@ -267,12 +179,12 @@ public class MainActivity extends Activity {
         } else {
             if (inputStart == listStart) {
                 // deleting the very first line item so, need to push the list down
-                setList(text, list, inputStart + 1, listEnd);
+                SpansHelper.setList(text, list, inputStart + 1, listEnd);
             }
 
             if (inputStart > listStart) {
                 // with ZWJ deleted, let's delete the newline before it, effectively deleting the line.
-                deleteAndIgnore(text, inputStart - 1, 1);
+                SpansHelper.deleteAndIgnore(text, inputStart - 1, 1);
             }
         }
 
@@ -281,7 +193,7 @@ public class MainActivity extends Activity {
 
     boolean handleNewlineDeletionInList(Editable text, int inputStart, Spanned charsOld, TypefaceSpan list,
             BulletSpan[] listItems) {
-        if (handledDeletionIgnore(text, charsOld)) {
+        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
             // let it go. This newline deletion was deliberate, happening when we're joining a list item with an empty one
             return false;
         }
@@ -316,7 +228,7 @@ public class MainActivity extends Activity {
 
             if (nextItemStart < listEnd) {
                 // push the list start to the start of the next item
-                setList(text, list, nextItemStart, listEnd);
+                SpansHelper.setList(text, list, nextItemStart, listEnd);
             } else {
                 // hmm, there's no next item actually... just remove the list!
                 text.removeSpan(list);
@@ -337,25 +249,25 @@ public class MainActivity extends Activity {
             }
 
             // adjust the leading item span to include both items' content
-            setListItem(text, leadingItem, start, end);
+            SpansHelper.setListItem(text, leadingItem, start, end);
 
             // just remove the trailing list item span. We've given the leading one the priority.
             text.removeSpan(trailingItem);
 
             if (trailingItem == null) {
                 // since we're joining text into the list at its end, let's expand the list span to include the new text
-                setList(text, list, listStart, end);
+                SpansHelper.setList(text, list, listStart, end);
             }
 
-            if (text.charAt(start) == ZWJ_CHAR) {
+            if (text.charAt(start) == Constants.ZWJ_CHAR) {
                 // looks like we just joined into an empty list item so, let's remove the orphan ZWJ of the leading item
-                deleteAndIgnore(text, start, 1);
+                SpansHelper.deleteAndIgnore(text, start, 1);
             }
         }
 
-        if (inputStart < text.length() && text.charAt(inputStart) == ZWJ_CHAR) {
+        if (inputStart < text.length() && text.charAt(inputStart) == Constants.ZWJ_CHAR) {
             // looks like the right side item was empty. Let's remove the orphan ZWJ of the trailing item.
-            deleteAndIgnore(text, inputStart, 1);
+            SpansHelper.deleteAndIgnore(text, inputStart, 1);
         }
 
         return true;

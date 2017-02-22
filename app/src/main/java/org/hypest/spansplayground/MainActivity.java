@@ -214,7 +214,7 @@ public class MainActivity extends Activity {
 
             if (itemStart == itemEnd) {
                 // add a ZWJ if bullet empty
-                text.insert(inputStart, "" + ZWJ_CHAR);
+                insertZwj(text, inputStart);
                 return true;
             }
         }

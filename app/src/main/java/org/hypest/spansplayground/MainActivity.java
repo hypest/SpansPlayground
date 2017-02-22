@@ -180,13 +180,17 @@ public class MainActivity extends Activity {
 
             // a newline adjacent or inside the list got deleted
 
-            BulletSpan leadingItem;
-            BulletSpan trailingItem;
+            BulletSpan leadingItem = null;
+            BulletSpan trailingItem = null;
 
             if (inputStart == listEnd) {
                 // we're joining text _into_ the list at its end so,
                 leadingItem = listItems[0];
                 trailingItem = null;
+            } else if (inputStart == listStart) {
+                // we're extracting the first list item out of the list, into the text before it so,
+                leadingItem = null;
+                trailingItem = listItems[0];
             } else {
                 // newline was separating two list items so, need to join those two, giving priority to the left most one.
                 leadingItem = text.getSpanStart(listItems[0]) < text.getSpanStart(listItems[1]) ?
@@ -195,33 +199,51 @@ public class MainActivity extends Activity {
                         listItems[0] : listItems[1];
             }
 
-            int start = text.getSpanStart(leadingItem);
-            int end;
-            if (trailingItem != null) {
-                end = text.getSpanEnd(trailingItem);
+            if (leadingItem == null) {
+                // we're extracting from the list start so, need to push the list start to the start of the next item
+                int nextItemStart = text.getSpanEnd(trailingItem) + 1; // +1 to cater for the trailing item's newline
+
+                if (nextItemStart < listEnd) {
+                    // push the list start to the start of the next item
+                    setList(text, list, nextItemStart, listEnd);
+                } else {
+                    // hmm, there's no next item actually... just remove the list!
+                    text.removeSpan(list);
+                }
+
+                // we're extracting from the list start so, the right-side item will drop out of the list
+                text.removeSpan(trailingItem);
             } else {
-                int nextNewlineIndex = text.toString().indexOf('\n', start);
-                end = nextNewlineIndex != -1 ? nextNewlineIndex : text.length();
+                // we're joining text to the list
+
+                int start = text.getSpanStart(leadingItem);
+                int end;
+                if (trailingItem != null) {
+                    end = text.getSpanEnd(trailingItem);
+                } else {
+                    int nextNewlineIndex = text.toString().indexOf('\n', start);
+                    end = nextNewlineIndex != -1 ? nextNewlineIndex : text.length();
+                }
+
+                // adjust the leading item span to include both items' content
+                setListItem(text, leadingItem, start, end);
+
+                // just remove the trailing list item span. We've given the leading one the priority.
+                text.removeSpan(trailingItem);
+
+                if (trailingItem == null) {
+                    // since we're joining text into the list at its end, let's expand the list span to include the new text
+                    setList(text, list, listStart, end);
+                }
+
+                if (text.charAt(start) == ZWJ_CHAR) {
+                    // looks like we just joined into an empty list item so, let's remove the orphan ZWJ of the leading item
+                    deleteAndIgnore(text, start, 1);
+                }
             }
 
-            // adjust the leading item span to include both items' content
-            setListItem(text, leadingItem, start, end);
-
-            // just remove the trailing list item span. We've given the leading one the priority.
-            text.removeSpan(trailingItem);
-
-            if (trailingItem == null) {
-                // since we're joining text into the list at its end, let's expand the list span to include the new text
-                setList(text, list, listStart, end);
-            }
-
-            if (text.charAt(start) == ZWJ_CHAR) {
-                // looks like we just joined into an empty list item so, let's remove the orphan ZWJ of the leading item
-                deleteAndIgnore(text, start, 1);
-            }
-
-            if (text.charAt(inputStart) == ZWJ_CHAR) {
-                // looks like we just joined an empty list item so, let's remove the orphan ZWJ of the trailing item
+            if (inputStart < text.length() && text.charAt(inputStart) == ZWJ_CHAR) {
+                // looks like the right side item was empty. Let's remove the orphan ZWJ of the trailing item.
                 deleteAndIgnore(text, inputStart, 1);
             }
 

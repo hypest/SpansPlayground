@@ -45,6 +45,11 @@ public class MainActivity extends Activity {
         text.insert(position, "" + ZWJ_CHAR);
     }
 
+    void deleteAndIgnore(Editable text, int start, int count) {
+        text.setSpan(new IgnoreDeletion(), start, start + count, Spanned.SPAN_COMPOSING);
+        text.delete(start, start + count);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,8 +122,8 @@ public class MainActivity extends Activity {
         }
 
         if (deletedZwj) {
-            AllowZwjDeletion[] allowZwjDeletions = charsOld.getSpans(0, 0, AllowZwjDeletion.class);
-            if (allowZwjDeletions != null && allowZwjDeletions.length > 0) {
+            IgnoreDeletion[] allowDeletions = charsOld.getSpans(0, 0, IgnoreDeletion.class);
+            if (allowDeletions != null && allowDeletions.length > 0) {
                 // let it go. This ZWJ deletion is deliberate, happening when we're joining a list item with an empty one
                 return false;
             }
@@ -139,7 +144,7 @@ public class MainActivity extends Activity {
 
                     if (inputStart > listStart) {
                         // with ZWJ deleted, let's delete the newline before it, effectively deleting the line.
-                        text.delete(inputStart - 1, inputStart);
+                        deleteAndIgnore(text, inputStart - 1, 1);
                     }
                 }
             }
@@ -148,8 +153,8 @@ public class MainActivity extends Activity {
         }
 
         if (zwjRightNeighbor != 0) {
-            // ZWJ got company after it so, it's no longer needed. Replace it with the neighbor
-            text.replace(inputStart - 1, inputStart + 1, "" + zwjRightNeighbor);
+            // ZWJ got company after it so, it's no longer needed
+            deleteAndIgnore(text, inputStart - 1, 1);
             return true;
         }
 
@@ -158,6 +163,12 @@ public class MainActivity extends Activity {
                         && charsNew.length() == 0
                         && charsOld.charAt(0) == NEWLINE;
         if (deletedNewline) {
+            IgnoreDeletion[] allowDeletions = charsOld.getSpans(0, 0, IgnoreDeletion.class);
+            if (allowDeletions != null && allowDeletions.length > 0) {
+                // let it go. This newline deletion was deliberate, happening when we're joining a list item with an empty one
+                return false;
+            }
+
             // a newline adjacent or inside the list got deleted
 
             BulletSpan leadingItem;
@@ -197,11 +208,7 @@ public class MainActivity extends Activity {
 
             if (text.charAt(start) == ZWJ_CHAR) {
                 // looks like we just joined with an empty list item so, let's remove the orphan ZWJ
-                text.setSpan(new AllowZwjDeletion(), start, start + 1, Spanned.SPAN_COMPOSING);
-                text.delete(start, start + 1);
-                // looks like we just joined with an empty list item so, let's remove the orphan ZWJ by replacing it
-                //  with its right-side neighbor
-//                text.replace(start, start + 2, "" + text.charAt(start + 1));
+                deleteAndIgnore(text, start, 1);
             }
 
             return true;
@@ -222,7 +229,7 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    static class AllowZwjDeletion {}
+    static class IgnoreDeletion {}
 
     // return true if newline got handled by the list
     boolean handleNewlineInList(Editable text, TypefaceSpan list, BulletSpan listItem, int newlineIndex,
@@ -261,7 +268,7 @@ public class MainActivity extends Activity {
             }
 
             // delete the newline and the ZWJ before it
-            text.delete(newlineIndex - 1, newlineIndex + 1);
+            deleteAndIgnore(text, newlineIndex - 1, 2);
             return true;
         }
 

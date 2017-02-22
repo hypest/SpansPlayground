@@ -50,6 +50,17 @@ public class MainActivity extends Activity {
         text.delete(start, start + count);
     }
 
+    boolean handledDeletionIgnore(Spannable text, Spanned textFragment) {
+        IgnoreDeletion[] allowDeletions = textFragment.getSpans(0, 0, IgnoreDeletion.class);
+        if (allowDeletions != null && allowDeletions.length > 0) {
+            // remove the marking span, it's job is finished.
+            text.removeSpan(allowDeletions[0]);
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,8 +133,7 @@ public class MainActivity extends Activity {
         }
 
         if (deletedZwj) {
-            IgnoreDeletion[] allowDeletions = charsOld.getSpans(0, 0, IgnoreDeletion.class);
-            if (allowDeletions != null && allowDeletions.length > 0) {
+            if (handledDeletionIgnore(text, charsOld)) {
                 // let it go. This ZWJ deletion is deliberate, happening when we're joining a list item with an empty one
                 return false;
             }
@@ -163,8 +173,7 @@ public class MainActivity extends Activity {
                         && charsNew.length() == 0
                         && charsOld.charAt(0) == NEWLINE;
         if (deletedNewline) {
-            IgnoreDeletion[] allowDeletions = charsOld.getSpans(0, 0, IgnoreDeletion.class);
-            if (allowDeletions != null && allowDeletions.length > 0) {
+            if (handledDeletionIgnore(text, charsOld)) {
                 // let it go. This newline deletion was deliberate, happening when we're joining a list item with an empty one
                 return false;
             }
@@ -207,8 +216,13 @@ public class MainActivity extends Activity {
             }
 
             if (text.charAt(start) == ZWJ_CHAR) {
-                // looks like we just joined with an empty list item so, let's remove the orphan ZWJ
+                // looks like we just joined into an empty list item so, let's remove the orphan ZWJ of the leading item
                 deleteAndIgnore(text, start, 1);
+            }
+
+            if (text.charAt(inputStart) == ZWJ_CHAR) {
+                // looks like we just joined an empty list item so, let's remove the orphan ZWJ of the trailing item
+                deleteAndIgnore(text, inputStart, 1);
             }
 
             return true;

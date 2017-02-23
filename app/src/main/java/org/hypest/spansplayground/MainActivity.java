@@ -44,8 +44,17 @@ public class MainActivity extends Activity {
 
         @Override
         public void afterTextChanged(Editable text) {
-            TextChangedEvent textChangedEvent = new TextChangedEvent(text, inputStart, charsOld, charsNew);
+            final TextChangedEvent textChangedEvent = new TextChangedEvent(text, inputStart, charsOld, charsNew);
             ListHelper.handleTextChangeForLists(mEditText.getText(), textChangedEvent);
+
+            if (textChangedEvent.doSetSelection()) {
+                mEditText.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mEditText.setSelection(textChangedEvent.getSelectionPosition());
+                    }
+                });
+            }
         }
     };
 }

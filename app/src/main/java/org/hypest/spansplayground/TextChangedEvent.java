@@ -10,6 +10,9 @@ class TextChangedEvent {
     final boolean deletedNewline;
     final int newlineIndex;
 
+    private boolean doSetSelection = false;
+    private int selectionPosition;
+
     TextChangedEvent(Spanned text, int inputStart, Spanned charsOld, Spanned charsNew) {
         this.inputStart = inputStart;
         this.charsOld = charsOld;
@@ -31,5 +34,18 @@ class TextChangedEvent {
         } else {
             newlineIndex = inputStart;
         }
+    }
+
+    boolean doSetSelection() {
+        return doSetSelection;
+    }
+
+    int getSelectionPosition() {
+        return selectionPosition;
+    }
+
+    void postSetSelection(int selectionPosition) {
+        doSetSelection = true;
+        this.selectionPosition = selectionPosition;
     }
 }

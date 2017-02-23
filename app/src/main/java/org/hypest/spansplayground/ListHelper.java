@@ -21,7 +21,7 @@ class ListHelper {
         BulletSpan listItem = listItems != null && listItems.length > 0 ? listItems[0] : null;
 
         if (event.gotNewline) {
-            return handleNewlineInList(text, list, listItem, event.inputStart);
+            return handleNewlineInList(text, event, list, listItem, event.inputStart);
         }
 
         if (event.deletedNewline) {
@@ -33,9 +33,10 @@ class ListHelper {
     }
 
     // return true if newline got handled by the list
-    private static boolean handleNewlineInList(Editable text, TypefaceSpan list, BulletSpan listItem, int newlineIndex) {
-        if (listItem == null) {
-            // no list so, nothing to do here
+    private static boolean handleNewlineInList(Editable text, TextChangedEvent event, TypefaceSpan list,
+            BulletSpan listItem, int newlineIndex) {
+        if (SpansHelper.handledIgnore(text, event.charsNew)) {
+            // let it go. This newline change was deliberate, happening when expanding the list at end-of-text
             return false;
         }
 
@@ -63,8 +64,15 @@ class ListHelper {
                 // list only has the empty list item so, remove the list itself as well!
                 text.removeSpan(list);
             } else {
-                // adjust the list end
+                // adjust the list end to only include the chars before the newline just added
                 SpansHelper.setList(text, list, listStart, newlineIndex);
+
+                if (newlineIndex == text.length() - 1) {
+                    // well, list was spanning to the end of text (which means we also had it open-ended) so, close it
+                    //  now that there will be non-list text after the list
+                    SpansHelper.closeListEnd(text, list);
+                    SpansHelper.closeListItemEnd(text, listItem);
+                }
             }
 
             // delete the newline
@@ -73,12 +81,34 @@ class ListHelper {
         }
 
         if (newlineIndex == itemEnd - 2) {
-            // newline added at the end of the list item so, adjust the leading one to include the new newline and
-            //  append new list item. Note: there's already a newline at the bullet end, hence the "-2" instead of "-1"
+            // newline added at the end of the bullet so, adjust the bullet to end at the new newline and append new
+            //  bullet. Note: there's already a newline at the bullet end, hence the "-2" instead of "-1" for that case.
             SpansHelper.setListItem(text, listItem, itemStart, newlineIndex + 1);
 
             // append a new list item span
             SpansHelper.newListItem(text, newlineIndex + 1, itemEnd);
+            return true;
+        }
+
+        if (newlineIndex == text.length() - 1) {
+            // the current bullet was open-ended before (since it's the end-of-text) and it automatically included the
+            //  newline so, no need to adjust the "current" bullet's range. It won't be the end-of-text anymore though
+            //  so instead, let's just close-end the bullet.
+            SpansHelper.closeListItemEnd(text, listItem);
+
+            // add a new newline to allow the new end-of-text bullet to render
+            SpansHelper.appendAndIgnore(text, "" + Constants.NEWLINE);
+
+            // attach a normal (close-ended as list no longer at end-of-text) new bullet to the extra newline we just added
+            SpansHelper.newListItem(text, newlineIndex + 1, newlineIndex + 2);
+
+            // list is no longer at the end-of-text so, close-end it
+            SpansHelper.closeListEnd(text, list);
+
+            // unfortunately, the cursor will be after the newly added newline so, let's put it back at the start of the
+            //  new bullet
+            event.postSetSelection(newlineIndex + 1);
+
             return true;
         }
 
@@ -92,8 +122,8 @@ class ListHelper {
 
     private static boolean handleNewlineDeletionInList(Editable text, int inputStart, int newlineIndex, Spanned charsOld,
             TypefaceSpan list, BulletSpan[] listItems) {
-        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
-            // let it go. This newline deletion was deliberate, happening when closing the list
+        if (SpansHelper.handledIgnore(text, charsOld)) {
+            // let it go. This newline change was deliberate, happening when closing the list
             return false;
         }
 
@@ -151,7 +181,17 @@ class ListHelper {
                 end = text.getSpanEnd(trailingItem);
             } else {
                 int nextNewlineIndex = text.toString().indexOf(Constants.NEWLINE, start + 1);
-                end = (nextNewlineIndex != -1 && nextNewlineIndex < listEnd) ? nextNewlineIndex : listEnd;
+
+                if (nextNewlineIndex == -1) {
+                    // no newline after the list so, need to expand the list to the end of text and open its end
+                    end = text.length();
+
+                    SpansHelper.openListEnd(text, list);
+                    SpansHelper.openListItemEnd(text, leadingItem);
+                } else {
+                    // we'll expand the list until the next newline, including the newline itself
+                    end = nextNewlineIndex + 1;
+                }
             }
 
             // adjust the leading item span to include both items' content

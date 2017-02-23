@@ -11,6 +11,7 @@ class TextChangedEvent {
 //    final char zwjRightNeighbor;
 //    final boolean deletedZwj;
     final boolean deletedNewline;
+    final int newlineIndex;
 
     TextChangedEvent(Spanned text, int inputStart, Spanned charsOld, Spanned charsNew) {
         this.inputStart = inputStart;
@@ -34,8 +35,16 @@ class TextChangedEvent {
 //                        && charsOld.charAt(0) == Constants.ZWJ_CHAR;
 
         deletedNewline =
-                charsOld.length() == 1
+                charsOld.length() > 0
                         && charsNew.length() == 0
-                        && charsOld.charAt(0) == Constants.NEWLINE;
+                        && charsOld.charAt(charsOld.length() - 1) == Constants.NEWLINE; // the framework seems to remove
+                                    // more than the newline and then add the text again sans the newline so, check the
+                                    // last char to detect the newline
+
+        if (deletedNewline) {
+            newlineIndex = inputStart + charsOld.length() - 1;
+        } else {
+            newlineIndex = inputStart;
+        }
     }
 }

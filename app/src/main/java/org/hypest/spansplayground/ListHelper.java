@@ -35,7 +35,8 @@ class ListHelper {
 //        }
 
         if (event.deletedNewline) {
-            return handleNewlineDeletionInList(text, event.inputStart, event.charsOld, list, listItems);
+            return handleNewlineDeletionInList(text, event.inputStart, event.newlineIndex, event.charsOld, list,
+                    listItems);
         }
 
 //        if (event.charsNew.length() == 0) {
@@ -92,28 +93,26 @@ class ListHelper {
 //            SpansHelper.deleteAndIgnore(text, newlineIndex - 1, 2);
 //            return true;
 //        }
-//
-//        if (newlineIndex == itemEnd -1){
-//            // newline added at the end of the list item so, adjust the leading one to not include the newline and
-//            //  add append new list item
-//            SpansHelper.setListItem(text, listItem, itemStart, newlineIndex);
-//
+
+        if (newlineIndex == itemEnd - 2) {
+            // newline added at the end of the list item so, adjust the leading one to include the new newline and
+            //  append new list item. Note: there's already a newline at the bullet end, hence the "-2" instead of "-1"
+            SpansHelper.setListItem(text, listItem, itemStart, newlineIndex + 1);
+
 //            // it's going to be an empty list item so, add a ZWJ to make the bullet render
 //            SpansHelper.insertZwj(text, newlineIndex + 1);
-//
-//            // append a new list item span and include the ZWJ in it
-//            SpansHelper.newListItem(text, newlineIndex + 1, itemEnd + 1);
-//            return true;
-//        }
-//
-//        {
-//            // newline added at some position inside the bullet so, end the current bullet and append a new one
-//            SpansHelper.setListItem(text, listItem, itemStart, newlineIndex);
-//            SpansHelper.newListItem(text, newlineIndex + 1, itemEnd);
-//            return true;
-//        }
 
-        return false;
+            // append a new list item span
+            SpansHelper.newListItem(text, newlineIndex + 1, itemEnd);
+            return true;
+        }
+
+        {
+            // newline added at some position inside the bullet so, end the current bullet and append a new one
+            SpansHelper.setListItem(text, listItem, itemStart, newlineIndex);
+            SpansHelper.newListItem(text, newlineIndex + 1, itemEnd);
+            return true;
+        }
     }
 
 //    private static boolean handleZwjDeletionInList(Editable text, int inputStart, Spanned charsOld, Spanned charsNew,
@@ -148,7 +147,7 @@ class ListHelper {
 //        return true;
 //    }
 
-    private static boolean handleNewlineDeletionInList(Editable text, int inputStart, Spanned charsOld,
+    private static boolean handleNewlineDeletionInList(Editable text, int inputStart, int newlineIndex, Spanned charsOld,
             TypefaceSpan list, BulletSpan[] listItems) {
 //        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
 //            // let it go. This newline deletion was deliberate, happening when we're joining a list item with an empty one
@@ -163,11 +162,11 @@ class ListHelper {
         BulletSpan leadingItem;
         BulletSpan trailingItem = null;
 
-        if (inputStart == listEnd) {
+        if (newlineIndex == listEnd && !SpansHelper.hasList(charsOld, 0, 0)) {
             // we're joining text _into_ the list at its end so,
             leadingItem = listItems[0];
             trailingItem = null;
-        } else if (inputStart == listStart && !SpansHelper.hasList(charsOld, 0, 0)) {
+        } else if (newlineIndex == listStart && !SpansHelper.hasList(charsOld, 0, 0)) {
             // we're extracting the first list item out of the list, into the text before it so,
             leadingItem = null;
             trailingItem = listItems[0];
@@ -208,8 +207,8 @@ class ListHelper {
             if (trailingItem != null) {
                 end = text.getSpanEnd(trailingItem);
             } else {
-                int nextNewlineIndex = text.toString().indexOf(Constants.NEWLINE, start);
-                end = nextNewlineIndex != -1 ? nextNewlineIndex : text.length();
+                int nextNewlineIndex = text.toString().indexOf(Constants.NEWLINE, start + 1);
+                end = (nextNewlineIndex != -1 && nextNewlineIndex < listEnd) ? nextNewlineIndex : listEnd;
             }
 
             // adjust the leading item span to include both items' content

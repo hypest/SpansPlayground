@@ -67,7 +67,9 @@ class ListHelper {
         int itemStart = text.getSpanStart(listItem);
         int itemEnd = text.getSpanEnd(listItem);
 
-        if (newlineIndex == itemStart) {
+        boolean atEndOfList = newlineIndex == listEnd - 2 || newlineIndex == text.length() - 1;
+
+        if (newlineIndex == itemStart && !atEndOfList) {
             // newline added at start of bullet so, push current bullet forward and add a new bullet in place
             SpansHelper.setListItem(text, listItem, newlineIndex + 1, itemEnd);
 
@@ -77,22 +79,22 @@ class ListHelper {
             return true;
         }
 
-//        if (rightAfterZwj && newlineIndex == listEnd - 1) {
-//            // close the list when entering a newline on an empty item at the end of the list
-//            text.removeSpan(listItem);
-//
-//            if (listEnd - listStart == 2) {
-//                // list only has the empty list item so, remove the list itself as well!
-//                text.removeSpan(list);
-//            } else {
-//                // adjust the list end
-//                SpansHelper.setList(text, list, listStart, newlineIndex - 2);
-//            }
-//
-//            // delete the newline and the ZWJ before it
-//            SpansHelper.deleteAndIgnore(text, newlineIndex - 1, 2);
-//            return true;
-//        }
+        if (newlineIndex == itemStart && atEndOfList) {
+            // close the list when entering a newline on an empty item at the end of the list
+            text.removeSpan(listItem);
+
+            if (listEnd - listStart == 1) {
+                // list only has the empty list item so, remove the list itself as well!
+                text.removeSpan(list);
+            } else {
+                // adjust the list end
+                SpansHelper.setList(text, list, listStart, newlineIndex);
+            }
+
+            // delete the newline
+            SpansHelper.deleteAndIgnore(text, newlineIndex, 1);
+            return true;
+        }
 
         if (newlineIndex == itemEnd - 2) {
             // newline added at the end of the list item so, adjust the leading one to include the new newline and
@@ -149,10 +151,10 @@ class ListHelper {
 
     private static boolean handleNewlineDeletionInList(Editable text, int inputStart, int newlineIndex, Spanned charsOld,
             TypefaceSpan list, BulletSpan[] listItems) {
-//        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
-//            // let it go. This newline deletion was deliberate, happening when we're joining a list item with an empty one
-//            return false;
-//        }
+        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
+            // let it go. This newline deletion was deliberate, happening when closing the list
+            return false;
+        }
 
         // a newline adjacent or inside the list got deleted
 
@@ -162,7 +164,7 @@ class ListHelper {
         BulletSpan leadingItem;
         BulletSpan trailingItem = null;
 
-        if (newlineIndex == listEnd && !SpansHelper.hasList(charsOld, 0, 0)) {
+        if (newlineIndex == listEnd) {
             // we're joining text _into_ the list at its end so,
             leadingItem = listItems[0];
             trailingItem = null;

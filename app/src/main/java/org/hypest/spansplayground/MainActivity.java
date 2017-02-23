@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
         mEditText.addTextChangedListener(tw);
 
         SpansHelper.newList(mEditText.getText(), 0, mEditText.length());
-        SpansHelper.newListItem(mEditText.getText(), 0, 2);
+        SpansHelper.newListItem(mEditText.getText(), 0, 3);
         SpansHelper.newListItem(mEditText.getText(), 3, 5);
     }
 

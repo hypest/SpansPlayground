@@ -167,7 +167,7 @@ class ListHelper {
             // we're joining text _into_ the list at its end so,
             leadingItem = listItems[0];
             trailingItem = null;
-        } else if (inputStart == listStart) {
+        } else if (inputStart == listStart && !SpansHelper.hasList(charsOld, 0, 0)) {
             // we're extracting the first list item out of the list, into the text before it so,
             leadingItem = null;
             trailingItem = listItems[0];

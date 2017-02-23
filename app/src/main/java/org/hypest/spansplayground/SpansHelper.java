@@ -53,4 +53,8 @@ class SpansHelper {
 //        return false;
 //    }
 
+    static boolean hasList(Spanned text, int start, int end) {
+        TypefaceSpan[] lists = text.getSpans(start, end, TypefaceSpan.class);
+        return lists != null && lists.length > 0;
+    }
 }

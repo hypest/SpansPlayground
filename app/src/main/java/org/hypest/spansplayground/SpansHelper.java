@@ -8,8 +8,8 @@ import android.text.style.BulletSpan;
 import android.text.style.TypefaceSpan;
 
 class SpansHelper {
-    private final static int FLAG_CLOSE_ENDED = Spanned.SPAN_INCLUSIVE_EXCLUSIVE;
-    private final static int FLAG_OPEN_ENDED = Spanned.SPAN_INCLUSIVE_INCLUSIVE;
+    final static int FLAG_CLOSE_ENDED = Spanned.SPAN_INCLUSIVE_EXCLUSIVE;
+    final static int FLAG_OPEN_ENDED = Spanned.SPAN_INCLUSIVE_INCLUSIVE;
 
     private static class Ignore {}
 
@@ -22,11 +22,19 @@ class SpansHelper {
     }
 
     static void newList(Spannable text, int start, int end) {
-        setList(text, newList(), start, end, FLAG_CLOSE_ENDED);
+        newList(text, start, end, FLAG_CLOSE_ENDED);
+    }
+
+    static void newList(Spannable text, int start, int end, int flags) {
+        setList(text, newList(), start, end, flags);
     }
 
     static void newListItem(Spannable text, int start, int end) {
-        setListItem(text, newListItem(), start, end, FLAG_CLOSE_ENDED);
+        newListItem(text, start, end, FLAG_CLOSE_ENDED);
+    }
+
+    static void newListItem(Spannable text, int start, int end, int flags) {
+        setListItem(text, newListItem(), start, end, flags);
     }
 
     static void setList(Spannable text, TypefaceSpan list, int start, int end) {

@@ -21,9 +21,9 @@ public class MainActivity extends Activity {
         mEditText.setText("b1\nb2");
         mEditText.addTextChangedListener(tw);
 
-        SpansHelper.newList(mEditText.getText(), 0, mEditText.length());
+        SpansHelper.newList(mEditText.getText(), 0, mEditText.length(), SpansHelper.FLAG_OPEN_ENDED);
         SpansHelper.newListItem(mEditText.getText(), 0, 3);
-        SpansHelper.newListItem(mEditText.getText(), 3, 5);
+        SpansHelper.newListItem(mEditText.getText(), 3, 5, SpansHelper.FLAG_OPEN_ENDED);
     }
 
     TextWatcher tw = new TextWatcher() {

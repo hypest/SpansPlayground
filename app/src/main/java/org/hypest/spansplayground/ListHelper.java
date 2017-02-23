@@ -187,19 +187,19 @@ class ListHelper {
         }
 
         if (leadingItem == null) {
-//            // we're extracting from the list start so, need to push the list start to the start of the next item
-//            int nextItemStart = text.getSpanEnd(trailingItem) + 1; // +1 to cater for the trailing item's newline
-//
-//            if (nextItemStart < listEnd) {
-//                // push the list start to the start of the next item
-//                SpansHelper.setList(text, list, nextItemStart, listEnd);
-//            } else {
-//                // hmm, there's no next item actually... just remove the list!
-//                text.removeSpan(list);
-//            }
-//
-//            // we're extracting from the list start so, the right-side item will drop out of the list
-//            text.removeSpan(trailingItem);
+            // we're extracting from the list start so, need to push the list start to the start of the next item
+            int nextItemStart = text.getSpanEnd(trailingItem);
+
+            if (nextItemStart < listEnd) {
+                // push the list start to the start of the next item
+                SpansHelper.setList(text, list, nextItemStart, listEnd);
+            } else {
+                // hmm, there's no next item actually... just remove the list!
+                text.removeSpan(list);
+            }
+
+            // we're extracting from the list start so, the right-side item will drop out of the list
+            text.removeSpan(trailingItem);
         } else {
             // we're joining text to the list
 

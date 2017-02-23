@@ -205,12 +205,12 @@ class ListHelper {
 
             int start = text.getSpanStart(leadingItem);
             int end;
-//            if (trailingItem != null) {
+            if (trailingItem != null) {
                 end = text.getSpanEnd(trailingItem);
-//            } else {
-//                int nextNewlineIndex = text.toString().indexOf('\n', start);
-//                end = nextNewlineIndex != -1 ? nextNewlineIndex : text.length();
-//            }
+            } else {
+                int nextNewlineIndex = text.toString().indexOf(Constants.NEWLINE, start);
+                end = nextNewlineIndex != -1 ? nextNewlineIndex : text.length();
+            }
 
             // adjust the leading item span to include both items' content
             SpansHelper.setListItem(text, leadingItem, start, end);
@@ -218,10 +218,10 @@ class ListHelper {
             // just remove the trailing list item span. We've given the leading one the priority.
             text.removeSpan(trailingItem);
 
-//            if (trailingItem == null) {
-//                // since we're joining text into the list at its end, let's expand the list span to include the new text
-//                SpansHelper.setList(text, list, listStart, end);
-//            }
+            if (trailingItem == null) {
+                // since we're joining text into the list at its end, let's expand the list span to include the new text
+                SpansHelper.setList(text, list, listStart, end);
+            }
         }
 
         return true;

@@ -24,32 +24,10 @@ class ListHelper {
             return handleNewlineInList(text, list, listItem, event.inputStart);
         }
 
-//        if (event.deletedZwj) {
-//            return handleZwjDeletionInList(text, event.inputStart, event.charsOld, event.charsNew, list);
-//        }
-//
-//        if (event.zwjRightNeighbor != 0) {
-//            // ZWJ got company after it so, it's no longer needed
-//            SpansHelper.deleteAndIgnore(text, event.inputStart - 1, 1);
-//            return true;
-//        }
-
         if (event.deletedNewline) {
             return handleNewlineDeletionInList(text, event.inputStart, event.newlineIndex, event.charsOld, list,
                     listItems);
         }
-
-//        if (event.charsNew.length() == 0) {
-//            // text was removed so, let's make sure the listitem has a ZWJ
-//            int itemStart = text.getSpanStart(listItem);
-//            int itemEnd = text.getSpanEnd(listItem);
-//
-//            if (itemStart == itemEnd) {
-//                // add a ZWJ if bullet empty
-//                SpansHelper.insertZwj(text, event.inputStart);
-//                return true;
-//            }
-//        }
 
         return false;
     }
@@ -72,8 +50,6 @@ class ListHelper {
         if (newlineIndex == itemStart && !atEndOfList) {
             // newline added at start of bullet so, push current bullet forward and add a new bullet in place
             SpansHelper.setListItem(text, listItem, newlineIndex + 1, itemEnd);
-
-//            SpansHelper.insertZwj(text, newlineIndex);
 
             SpansHelper.newListItem(text, newlineIndex, newlineIndex + 1);
             return true;
@@ -101,9 +77,6 @@ class ListHelper {
             //  append new list item. Note: there's already a newline at the bullet end, hence the "-2" instead of "-1"
             SpansHelper.setListItem(text, listItem, itemStart, newlineIndex + 1);
 
-//            // it's going to be an empty list item so, add a ZWJ to make the bullet render
-//            SpansHelper.insertZwj(text, newlineIndex + 1);
-
             // append a new list item span
             SpansHelper.newListItem(text, newlineIndex + 1, itemEnd);
             return true;
@@ -116,38 +89,6 @@ class ListHelper {
             return true;
         }
     }
-
-//    private static boolean handleZwjDeletionInList(Editable text, int inputStart, Spanned charsOld, Spanned charsNew,
-//            TypefaceSpan list) {
-//        if (SpansHelper.handledDeletionIgnore(text, charsOld)) {
-//            // let it go. This ZWJ deletion is deliberate, happening when we're joining a list item with an empty one
-//            return false;
-//        }
-//
-//        // ZWJ just got deleted. Unfortunately, we need to manually remove the dangling list item span (a side
-//        //  effect of SPAN_INCLUSIVE_INCLUSIVE). Fortunately, it's right there at the start of charsNew :)
-//        text.removeSpan(charsNew.getSpans(0, 0, BulletSpan.class)[0]);
-//
-//        int listStart = text.getSpanStart(list);
-//        int listEnd = text.getSpanEnd(list);
-//
-//        if (listStart == listEnd) {
-//            // list just got empty so, remove it
-//            text.removeSpan(list);
-//        } else {
-//            if (inputStart == listStart) {
-//                // deleting the very first line item so, need to push the list down
-//                SpansHelper.setList(text, list, inputStart + 1, listEnd);
-//            }
-//
-//            if (inputStart > listStart) {
-//                // with ZWJ deleted, let's delete the newline before it, effectively deleting the line.
-//                SpansHelper.deleteAndIgnore(text, inputStart - 1, 1);
-//            }
-//        }
-//
-//        return true;
-//    }
 
     private static boolean handleNewlineDeletionInList(Editable text, int inputStart, int newlineIndex, Spanned charsOld,
             TypefaceSpan list, BulletSpan[] listItems) {

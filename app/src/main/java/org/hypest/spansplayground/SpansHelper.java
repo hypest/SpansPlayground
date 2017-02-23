@@ -33,10 +33,6 @@ class SpansHelper {
         text.setSpan(listItem, start, end, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
     }
 
-//    static void insertZwj(Editable text, int position) {
-//        text.insert(position, "" + Constants.ZWJ_CHAR);
-//    }
-
     static void deleteAndIgnore(Editable text, int start, int count) {
         text.setSpan(new IgnoreDeletion(), start, start + count, Spanned.SPAN_COMPOSING);
         text.delete(start, start + count);

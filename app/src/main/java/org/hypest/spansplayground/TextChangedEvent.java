@@ -7,9 +7,6 @@ class TextChangedEvent {
     final Spanned charsOld;
     final Spanned charsNew;
     final boolean gotNewline;
-//    final boolean gotNewlineAfterZwj;
-//    final char zwjRightNeighbor;
-//    final boolean deletedZwj;
     final boolean deletedNewline;
     final int newlineIndex;
 
@@ -21,18 +18,6 @@ class TextChangedEvent {
         gotNewline =
                 charsNew.length() == 1
                         && charsNew.charAt(0) == Constants.NEWLINE;
-
-//        zwjRightNeighbor =
-//                (inputStart > 0
-//                        && charsNew.length() > 0
-//                        && text.charAt(inputStart - 1) == Constants.ZWJ_CHAR) ? charsNew.charAt(0) : 0;
-//
-//        gotNewlineAfterZwj = zwjRightNeighbor == Constants.NEWLINE;
-//
-//        deletedZwj =
-//                charsOld.length() == 1
-//                        && charsNew.length() == 0
-//                        && charsOld.charAt(0) == Constants.ZWJ_CHAR;
 
         deletedNewline =
                 charsOld.length() > 0

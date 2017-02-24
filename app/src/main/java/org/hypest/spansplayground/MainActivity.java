@@ -2,59 +2,26 @@ package org.hypest.spansplayground;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.Spanned;
-import android.text.TextWatcher;
 import android.widget.EditText;
 
 public class MainActivity extends Activity {
-
-    EditText mEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mEditText = (EditText) findViewById(R.id.edittext);
+        EditText editText = (EditText) findViewById(R.id.edittext);
 
-        mEditText.setText("b1\nb2");
-        mEditText.addTextChangedListener(tw);
+        editText.setText("pro\nb1\nb2\naft");
 
-        SpansHelper.newList(mEditText.getText(), 0, mEditText.length(), SpansHelper.FLAG_OPEN_ENDED);
-        SpansHelper.newListItem(mEditText.getText(), 0, 3);
-        SpansHelper.newListItem(mEditText.getText(), 3, 5, SpansHelper.FLAG_OPEN_ENDED);
+        SpansHelper.newList(editText.getText(), 4, 10, Spanned.SPAN_PARAGRAPH);
+        SpansHelper.newListItem(editText.getText(), 4, 7);
+        SpansHelper.newListItem(editText.getText(), 7, 10);
+
+        EndOfBufferMarkerAdder.install(editText);
+        ListGarbageCollection.install(editText.getText());
+        ListHandler.install(editText);
     }
-
-    TextWatcher tw = new TextWatcher() {
-        private int inputStart;
-        private Spanned charsOld;
-        private Spanned charsNew;
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            inputStart = start;
-            charsOld = (Spanned) s.subSequence(start, start + count);
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            charsNew = (Spanned) s.subSequence(start, start + count);
-        }
-
-        @Override
-        public void afterTextChanged(Editable text) {
-            final TextChangedEvent textChangedEvent = new TextChangedEvent(text, inputStart, charsOld, charsNew);
-            ListHelper.handleTextChangeForLists(mEditText.getText(), textChangedEvent);
-
-            if (textChangedEvent.doSetSelection()) {
-                mEditText.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mEditText.setSelection(textChangedEvent.getSelectionPosition());
-                    }
-                });
-            }
-        }
-    };
 }

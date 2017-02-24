@@ -8,8 +8,10 @@ import android.text.style.BulletSpan;
 import android.text.style.TypefaceSpan;
 
 class SpansHelper {
-    final static int FLAG_CLOSE_ENDED = Spanned.SPAN_INCLUSIVE_EXCLUSIVE;
-    final static int FLAG_OPEN_ENDED = Spanned.SPAN_INCLUSIVE_INCLUSIVE;
+//    enum Zipping {
+//        MARK_NORMAL,
+//        MARK_ZIPPED,
+//    }
 
     private static class Ignore {}
 
@@ -17,12 +19,12 @@ class SpansHelper {
         return new TypefaceSpan("serif");
     }
 
-    static BulletSpan newListItem() {
+    private static BulletSpan newListItem() {
         return new BulletSpan();
     }
 
     static void newList(Spannable text, int start, int end) {
-        newList(text, start, end, FLAG_CLOSE_ENDED);
+        newList(text, start, end, Spanned.SPAN_PARAGRAPH);
     }
 
     static void newList(Spannable text, int start, int end, int flags) {
@@ -30,11 +32,13 @@ class SpansHelper {
     }
 
     static void newListItem(Spannable text, int start, int end) {
-        newListItem(text, start, end, FLAG_CLOSE_ENDED);
+        newListItem(text, start, end, Spanned.SPAN_PARAGRAPH);
+//        newListItem(text, start, end, flagUnzip(Spanned.SPAN_PARAGRAPH));
     }
 
     static void newListItem(Spannable text, int start, int end, int flags) {
         setListItem(text, newListItem(), start, end, flags);
+//        setListItem(text, newListItem(), start, end, flagUnzip(flags));
     }
 
     static void setList(Spannable text, TypefaceSpan list, int start, int end) {
@@ -54,19 +58,19 @@ class SpansHelper {
     }
 
     static void openListEnd(Spannable text, TypefaceSpan list) {
-        text.setSpan(list, text.getSpanStart(list), text.getSpanEnd(list), FLAG_OPEN_ENDED);
+//        text.setSpan(list, text.getSpanStart(list), text.getSpanEnd(list), FLAG_OPEN_ENDED);
     }
 
     static void closeListEnd(Spannable text, TypefaceSpan list) {
-        text.setSpan(list, text.getSpanStart(list), text.getSpanEnd(list), FLAG_CLOSE_ENDED);
+//        text.setSpan(list, text.getSpanStart(list), text.getSpanEnd(list), FLAG_CLOSE_ENDED);
     }
 
     static void openListItemEnd(Spannable text, BulletSpan listItem) {
-        text.setSpan(listItem, text.getSpanStart(listItem), text.getSpanEnd(listItem), FLAG_OPEN_ENDED);
+//        text.setSpan(listItem, text.getSpanStart(listItem), text.getSpanEnd(listItem), FLAG_OPEN_ENDED);
     }
 
     static void closeListItemEnd(Spannable text, BulletSpan listItem) {
-        text.setSpan(listItem, text.getSpanStart(listItem), text.getSpanEnd(listItem), FLAG_CLOSE_ENDED);
+//        text.setSpan(listItem, text.getSpanStart(listItem), text.getSpanEnd(listItem), FLAG_CLOSE_ENDED);
     }
 
     static void deleteAndIgnore(Editable text, int start, int count) {
@@ -97,4 +101,20 @@ class SpansHelper {
         TypefaceSpan[] lists = text.getSpans(start, end, TypefaceSpan.class);
         return lists != null && lists.length > 0;
     }
+
+//    static int flagUnzip(int flags) {
+//        return (flags & ~Spanned.SPAN_USER) | (Zipping.MARK_ZIPPED.ordinal() << Spanned.SPAN_USER_SHIFT);
+//    }
+//
+//    static boolean isFlaggedUnzip(int flags) {
+//        return Zipping.MARK_ZIPPED.ordinal() == ((flags & Spanned.SPAN_USER) >>> Spanned.SPAN_USER_SHIFT);
+//    }
+//
+//    static void flagUnzip(Spannable text, Object span) {
+//        text.setSpan(span, text.getSpanStart(span), text.getSpanEnd(span), flagUnzip(text.getSpanFlags(span)));
+//    }
+//
+//    static boolean isFlaggedUnzip(Spanned text, Object span) {
+//        return isFlaggedUnzip(text.getSpanFlags(span));
+//    }
 }

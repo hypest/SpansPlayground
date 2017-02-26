@@ -8,15 +8,11 @@ class SpanWrapper<T> {
     private WeakReference<Spannable> mSpannable;
     private WeakReference<T> mSpan;
 
-    private static <T> SpanWrapper<T> from(Spannable spannable, T span) {
-        return new SpanWrapper<>(spannable, span);
-    }
-
     static <T> SpanWrapper<T>[] getSpans(Spannable spannable, int start, int end, Class<T> type) {
         T[] spanObjects = spannable.getSpans(start, end, type);
         SpanWrapper<T>[] spanWrappers = new SpanWrapper[spanObjects.length];
         for (int i = 0; i < spanObjects.length; i++) {
-            spanWrappers[i] = from(spannable, spanObjects[i]);
+            spanWrappers[i] = new SpanWrapper<>(spannable, spanObjects[i]);
         }
 
         return spanWrappers;
@@ -25,13 +21,13 @@ class SpanWrapper<T> {
     static <T> SpanWrapper<T>[] getSpans(Spannable spannable, T[] spanObjects) {
         SpanWrapper<T>[] spanWrappers = new SpanWrapper[spanObjects.length];
         for (int i = 0; i < spanObjects.length; i++) {
-            spanWrappers[i] = from(spannable, spanObjects[i]);
+            spanWrappers[i] = new SpanWrapper<>(spannable, spanObjects[i]);
         }
 
         return spanWrappers;
     }
 
-    private SpanWrapper(Spannable spannable, T span) {
+    SpanWrapper(Spannable spannable, T span) {
         mSpannable = new WeakReference<>(spannable);
         mSpan = new WeakReference<>(span);
     }
@@ -77,7 +73,6 @@ class SpanWrapper<T> {
             return;
         }
 
-
         mSpannable.get().setSpan(mSpan.get(), start, getEnd(), getFlags());
     }
 
@@ -86,7 +81,6 @@ class SpanWrapper<T> {
             return;
         }
 
-
         mSpannable.get().setSpan(mSpan.get(), getStart(), end, getFlags());
     }
 
@@ -94,7 +88,6 @@ class SpanWrapper<T> {
         if (mSpannable.get() == null || mSpan.get() == null) {
             return;
         }
-
 
         mSpannable.get().setSpan(mSpan.get(), getStart(), getEnd(), flags);
     }

@@ -18,7 +18,7 @@ class ListHelper {
         ListItemSpan listItem = listItems != null && listItems.length > 0 ? listItems[0] : null;
 
         if (event.gotNewline) {
-            return handleNewlineInList(text, event, list, listItem, event.inputStart);
+            return handleNewlineInList(text, list, listItem, event.inputStart);
         }
 
         if (event.gotEndOfBufferMarker) {
@@ -29,8 +29,7 @@ class ListHelper {
     }
 
     // return true if newline got handled by the list
-    private static boolean handleNewlineInList(Editable text, TextChangedEvent event, ListSpan list,
-            ListItemSpan listItem, int newlineIndex) {
+    private static boolean handleNewlineInList(Editable text, ListSpan list, ListItemSpan listItem, int newlineIndex) {
         int listStart = text.getSpanStart(list);
         int listEnd = text.getSpanEnd(list);
 

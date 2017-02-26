@@ -1,15 +1,12 @@
 package org.hypest.spansplayground;
 
 import android.text.Editable;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextWatcher;
 import android.widget.TextView;
 
-class EndOfBufferMarkerAdderSimple implements TextWatcher {
+class EndOfBufferMarkerAdder implements TextWatcher {
     static void install(TextView text) {
-        text.addTextChangedListener(new EndOfBufferMarkerAdderSimple());
+        text.addTextChangedListener(new EndOfBufferMarkerAdder());
     }
 
     @Override

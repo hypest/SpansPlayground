@@ -5,12 +5,12 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.widget.TextView;
 
-class ListHandlerSimple implements TextWatcher {
+class ListHandler implements TextWatcher {
     private int inputStart;
     private Spanned charsNew;
 
     static void install(TextView text) {
-        text.addTextChangedListener(new ListHandlerSimple());
+        text.addTextChangedListener(new ListHandler());
     }
 
     @Override

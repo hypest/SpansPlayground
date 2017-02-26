@@ -2,7 +2,6 @@ package org.hypest.spansplayground;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.text.Spanned;
 import android.widget.EditText;
 
 public class MainActivity extends Activity {
@@ -16,12 +15,16 @@ public class MainActivity extends Activity {
 
         editText.setText("pro\nb1\nb2\naft");
 
-        SpansHelper.newList(editText.getText(), 4, 10, Spanned.SPAN_PARAGRAPH);
+        SpansHelper.newList(editText.getText(), 4, 10);
         SpansHelper.newListItem(editText.getText(), 4, 7);
         SpansHelper.newListItem(editText.getText(), 7, 10);
 
-        EndOfBufferMarkerAdder.install(editText);
-        ListGarbageCollection.install(editText.getText());
-        ListHandler.install(editText);
+        ParagraphBleedAdjuster.install(editText);
+        ParagraphCollapseAdjuster.install(editText);
+        ParagraphCollapseRemover.install(editText);
+
+        ListHandlerSimple.install(editText);
+
+        EndOfBufferMarkerAdderSimple.install(editText);
     }
 }

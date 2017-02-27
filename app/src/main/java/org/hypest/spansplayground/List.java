@@ -22,9 +22,8 @@ class List implements TextWatcher {
     private enum PositionType {
         LIST_START,
         EMPTY_ITEM_AT_LIST_END,
-        LIST_ITEM_END,
         TEXT_END,
-        LIST_ITEM_MIDDLE
+        LIST_ITEM_BODY
     }
 
     private Editable text;
@@ -81,14 +80,11 @@ class List implements TextWatcher {
                 case EMPTY_ITEM_AT_LIST_END:
                     handleNewlineAtEmptyItemAtListEnd(list, item, event.inputStart);
                     break;
-                case LIST_ITEM_END:
-                    handleNewlineAtListItemEnd(item, event.inputStart);
-                    break;
                 case TEXT_END:
                     handleNewlineAtTextEnd();
                     break;
-                case LIST_ITEM_MIDDLE:
-                    handleNewlineInListItemMiddle(item, event.inputStart);
+                case LIST_ITEM_BODY:
+                    handleNewlineInListItemBody(item, event.inputStart);
                     break;
             }
         }
@@ -110,16 +106,12 @@ class List implements TextWatcher {
             return PositionType.EMPTY_ITEM_AT_LIST_END;
         }
 
-        if (newlineIndex == item.getEnd() - 2) {
-            return PositionType.LIST_ITEM_END;
-        }
-
         if (newlineIndex == text.length() - 1) {
             return PositionType.TEXT_END;
         }
 
-        // no special case applied so, newline is in the "middle" of the bullet
-        return PositionType.LIST_ITEM_MIDDLE;
+        // no special case applied so, newline is in the "body" of the bullet
+        return PositionType.LIST_ITEM_BODY;
     }
 
     private void handleNewlineAtListStart(SpanWrapper<ListItemSpan> item, int newlineIndex) {
@@ -147,17 +139,6 @@ class List implements TextWatcher {
         text.delete(newlineIndex, newlineIndex + 1);
     }
 
-    private void handleNewlineAtListItemEnd(SpanWrapper<ListItemSpan> item, int newlineIndex) {
-        // newline added at the end of the bullet. Note: there's already a newline at the bullet end, hence the "-2"
-        //  in the condition instead of "-1".
-
-        // append a new list item span
-        newListItem(newlineIndex + 1, item.getEnd());
-
-        // newline added at the end of the bullet so, adjust the bullet to end at the new newline.
-        item.setEnd(newlineIndex + 1);
-    }
-
     private void handleNewlineAtTextEnd() {
         // got a newline while being at the end-of-text. We'll let the current list item engulf it and will wait
         //  for the end-of-text marker event in order to attach the new list item to it when that happens.
@@ -165,7 +146,7 @@ class List implements TextWatcher {
         // no-op here
     }
 
-    private void handleNewlineInListItemMiddle(SpanWrapper<ListItemSpan> item, int newlineIndex) {
+    private void handleNewlineInListItemBody(SpanWrapper<ListItemSpan> item, int newlineIndex) {
         // newline added at some position inside the bullet so, end the current bullet and append a new one
         newListItem(newlineIndex + 1, item.getEnd());
         item.setEnd(newlineIndex + 1);

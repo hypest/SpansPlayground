@@ -15,15 +15,15 @@ public class MainActivity extends Activity {
 
         editText.setText("pro\nb1\nb2\naft");
 
-        List.newList(editText.getText(), 4, 10);
-        List.newListItem(editText.getText(), 4, 7);
-        List.newListItem(editText.getText(), 7, 10);
+        ListHandler.newList(editText.getText(), 4, 10);
+        ListHandler.newListItem(editText.getText(), 4, 7);
+        ListHandler.newListItem(editText.getText(), 7, 10);
 
         ParagraphBleedAdjuster.install(editText);
         ParagraphCollapseAdjuster.install(editText);
         ParagraphCollapseRemover.install(editText);
 
-        List.install(editText);
+        ListWatcher.install(editText);
 
         EndOfBufferMarkerAdder.install(editText);
     }

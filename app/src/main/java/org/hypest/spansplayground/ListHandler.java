@@ -1,14 +1,11 @@
 package org.hypest.spansplayground;
 
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.Spanned;
-import android.text.TextWatcher;
-import android.widget.EditText;
 
-class List implements TextWatcher {
-    static void install(EditText text) {
-        text.addTextChangedListener(new List(text.getText()));
+class ListHandler {
+    interface TextDeleter {
+        void delete(final int start, final int end);
     }
 
     private enum PositionType {
@@ -18,35 +15,9 @@ class List implements TextWatcher {
         LIST_ITEM_BODY
     }
 
-    private Editable text;
+    private Spannable text;
 
-    private int inputStart;
-    private Spanned charsNew;
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-        inputStart = start;
-        charsNew = (Spanned) s.subSequence(start, start + count);
-    }
-
-    @Override
-    public void afterTextChanged(Editable text) {
-        // NOTE: According to the documentation, by the time this afterTextChanged have been called, the text might
-        //  have been changed by other TextWatcher's afterTextChanged calls. This might introduce some inconsistency
-        //  and "random" bugs.
-
-        // use charsNew to get the spans at the input point. It appears to be more reliable vs the whole Editable.
-        ListSpan[] lists = charsNew.getSpans(0, 0, ListSpan.class);
-        if (lists != null && lists.length > 0) {
-            handleTextChangeForLists(lists);
-        }
-    }
-
-    private List(Editable text) {
+    ListHandler(Spannable text) {
         this.text = text;
     }
 
@@ -62,7 +33,14 @@ class List implements TextWatcher {
         newListItem(text, start, end);
     }
 
-    private void handleTextChangeForLists(ListSpan[] lists) {
+    void handleTextChangeForLists(Spannable text, int inputStart, Spanned charsNew, TextDeleter textDeleter) {
+        // use charsNew to get the spans at the input point. It appears to be more reliable vs the whole Editable.
+        ListSpan[] lists = charsNew.getSpans(0, 0, ListSpan.class);
+        if (lists == null || lists.length == 0) {
+            // no lists so, bail.
+            return;
+        }
+
         SpanWrapper<ListSpan> list = new SpanWrapper<>(text, lists[0]); // TODO: handle nesting
 
         ListItemSpan[] listItems = charsNew.getSpans(0, 0, ListItemSpan.class);
@@ -73,12 +51,12 @@ class List implements TextWatcher {
                 || (charsNew.length() == 2 && charsNew.charAt(0) == Constants.NEWLINE
                 && charsNew.charAt(1) == Constants.END_OF_BUFFER_MARKER);
         if (gotNewline) {
-            switch (getNewlinePositionType(list, item, inputStart)) {
+            switch (getNewlinePositionType(text, list, item, inputStart)) {
                 case LIST_START:
                     handleNewlineAtListStart(item, inputStart);
                     break;
                 case EMPTY_ITEM_AT_LIST_END:
-                    handleNewlineAtEmptyItemAtListEnd(list, item, inputStart);
+                    handleNewlineAtEmptyItemAtListEnd(list, item, inputStart, textDeleter);
                     break;
                 case TEXT_END:
                     handleNewlineAtTextEnd();
@@ -95,8 +73,8 @@ class List implements TextWatcher {
         }
     }
 
-    private PositionType getNewlinePositionType(SpanWrapper<ListSpan> list, SpanWrapper<ListItemSpan> item,
-            int newlineIndex) {
+    private PositionType getNewlinePositionType(Spannable text, SpanWrapper<ListSpan> list,
+            SpanWrapper<ListItemSpan> item, int newlineIndex) {
         boolean atEndOfList = newlineIndex == list.getEnd() - 2 || newlineIndex == text.length() - 1;
 
         if (newlineIndex == item.getStart() && !atEndOfList) {
@@ -124,7 +102,7 @@ class List implements TextWatcher {
     }
 
     private void handleNewlineAtEmptyItemAtListEnd(SpanWrapper<ListSpan> list, SpanWrapper<ListItemSpan> item,
-            int newlineIndex) {
+            int newlineIndex, TextDeleter textDeleter) {
         // close the list when entering a newline on an empty item at the end of the list
         item.remove();
 
@@ -137,7 +115,7 @@ class List implements TextWatcher {
         }
 
         // delete the newline
-        text.delete(newlineIndex, newlineIndex + 1);
+        textDeleter.delete(newlineIndex, newlineIndex + 1);
     }
 
     private void handleNewlineAtTextEnd() {

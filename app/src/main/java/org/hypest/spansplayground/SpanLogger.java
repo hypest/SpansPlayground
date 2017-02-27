@@ -2,7 +2,10 @@ package org.hypest.spansplayground;
 
 import android.text.Spanned;
 import android.text.TextUtils;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by hypest on 11/01/17.

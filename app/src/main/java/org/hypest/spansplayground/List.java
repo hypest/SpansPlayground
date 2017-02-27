@@ -7,16 +7,8 @@ import android.text.TextWatcher;
 import android.widget.EditText;
 
 class List implements TextWatcher {
-    static void installW(EditText text) {
+    static void install(EditText text) {
         text.addTextChangedListener(new List(text.getText()));
-    }
-
-    static void newList(Spannable text, int start, int end) {
-        text.setSpan(new ListSpan(), start, end, Spanned.SPAN_PARAGRAPH);
-    }
-
-    static void newListItem(Spannable text, int start, int end) {
-        text.setSpan(new ListItemSpan(), start, end, Spanned.SPAN_PARAGRAPH);
     }
 
     private enum PositionType {
@@ -47,50 +39,59 @@ class List implements TextWatcher {
         //  have been changed by other TextWatcher's afterTextChanged calls. This might introduce some inconsistency
         //  and "random" bugs.
 
-        handleTextChangeForLists(text, new TextChangedEvent(inputStart, charsNew));
+        // use charsNew to get the spans at the input point. It appears to be more reliable vs the whole Editable.
+        ListSpan[] lists = charsNew.getSpans(0, 0, ListSpan.class);
+        if (lists != null && lists.length > 0) {
+            handleTextChangeForLists(lists);
+        }
     }
 
     private List(Editable text) {
         this.text = text;
     }
 
+    static void newList(Spannable text, int start, int end) {
+        text.setSpan(new ListSpan(), start, end, Spanned.SPAN_PARAGRAPH);
+    }
+
+    static void newListItem(Spannable text, int start, int end) {
+        text.setSpan(new ListItemSpan(), start, end, Spanned.SPAN_PARAGRAPH);
+    }
+
     private void newListItem(int start, int end) {
         newListItem(text, start, end);
     }
 
-    private void handleTextChangeForLists(Editable text, TextChangedEvent event) {
-        // use charsNew to get the spans at the input point. It appears to be more reliable vs the whole Editable.
-        ListSpan[] lists = event.charsNew.getSpans(0, 0, ListSpan.class);
-        if (lists == null || lists.length == 0) {
-            // no list so, nothing to do here
-            return;
-        }
-
+    private void handleTextChangeForLists(ListSpan[] lists) {
         SpanWrapper<ListSpan> list = new SpanWrapper<>(text, lists[0]); // TODO: handle nesting
 
-        ListItemSpan[] listItems = event.charsNew.getSpans(0, 0, ListItemSpan.class);
+        ListItemSpan[] listItems = charsNew.getSpans(0, 0, ListItemSpan.class);
         SpanWrapper<ListItemSpan> item = listItems != null && listItems.length > 0 ?
                 new SpanWrapper<>(text, listItems[0]) : null;
 
-        if (event.gotNewline) {
-            switch (getNewlinePositionType(list, item, event.inputStart)) {
+        boolean gotNewline = (charsNew.length() == 1 && charsNew.charAt(0) == Constants.NEWLINE)
+                || (charsNew.length() == 2 && charsNew.charAt(0) == Constants.NEWLINE
+                && charsNew.charAt(1) == Constants.END_OF_BUFFER_MARKER);
+        if (gotNewline) {
+            switch (getNewlinePositionType(list, item, inputStart)) {
                 case LIST_START:
-                    handleNewlineAtListStart(item, event.inputStart);
+                    handleNewlineAtListStart(item, inputStart);
                     break;
                 case EMPTY_ITEM_AT_LIST_END:
-                    handleNewlineAtEmptyItemAtListEnd(list, item, event.inputStart);
+                    handleNewlineAtEmptyItemAtListEnd(list, item, inputStart);
                     break;
                 case TEXT_END:
                     handleNewlineAtTextEnd();
                     break;
                 case LIST_ITEM_BODY:
-                    handleNewlineInListItemBody(item, event.inputStart);
+                    handleNewlineInListItemBody(item, inputStart);
                     break;
             }
         }
 
-        if (event.gotEndOfBufferMarker) {
-            handleEndOfBufferInList(item, event.inputStart);
+        boolean gotEndOfBufferMarker = (charsNew.length() == 1 && charsNew.charAt(0) == Constants.END_OF_BUFFER_MARKER);
+        if (gotEndOfBufferMarker) {
+            handleEndOfBufferInList(item, inputStart);
         }
     }
 

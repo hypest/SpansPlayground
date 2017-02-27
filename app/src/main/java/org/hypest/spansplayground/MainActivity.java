@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
         ParagraphCollapseAdjuster.install(editText);
         ParagraphCollapseRemover.install(editText);
 
-        List.installW(editText);
+        List.install(editText);
 
         EndOfBufferMarkerAdder.install(editText);
     }

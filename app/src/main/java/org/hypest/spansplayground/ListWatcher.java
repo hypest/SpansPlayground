@@ -2,7 +2,6 @@ package org.hypest.spansplayground;
 
 import android.text.Editable;
 import android.text.Spannable;
-import android.text.Spanned;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
@@ -46,8 +45,9 @@ class ListWatcher implements TextWatcher {
         listHandler.handleTextChangeForLists(
                 (Spannable) s,
                 start,
-                (Spanned) s.subSequence(start, start + count), // subsequence seems more reliable vs the whole Editable.
+                count,
                 textDeleter);
+
     }
 
     @Override

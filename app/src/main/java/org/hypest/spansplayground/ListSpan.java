@@ -1,10 +1,13 @@
 package org.hypest.spansplayground;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.style.TypefaceSpan;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.text.TextPaint;
+import android.text.style.MetricAffectingSpan;
 
-class ListSpan extends TypefaceSpan implements ParagraphFlagged {
+class ListSpan extends MetricAffectingSpan implements ParagraphFlagged {
+    private final String mFamily;
+
     private int mStartBeforeColapse = -1;
     private int mEndBeforeBleed = -1;
 
@@ -13,32 +16,42 @@ class ListSpan extends TypefaceSpan implements ParagraphFlagged {
     }
 
     ListSpan(String family) {
-        super(family);
+        mFamily = family;
     }
 
-    ListSpan(Parcel src) {
-        super(src);
+    @Override
+    public void updateDrawState(TextPaint ds) {
+        apply(ds, mFamily);
     }
 
-    public int describeContents() {
-        return 0;
+    @Override
+    public void updateMeasureState(TextPaint paint) {
+        apply(paint, mFamily);
     }
 
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-    }
+    private static void apply(Paint paint, String family) {
+        int oldStyle;
 
-    public static final Parcelable.Creator<ListSpan> CREATOR = new Parcelable.Creator<ListSpan>() {
-        @Override
-        public ListSpan createFromParcel(Parcel in) {
-            return new ListSpan(in);
+        Typeface old = paint.getTypeface();
+        if (old == null) {
+            oldStyle = 0;
+        } else {
+            oldStyle = old.getStyle();
         }
 
-        @Override
-        public ListSpan[] newArray(int size) {
-            return new ListSpan[size];
+        Typeface tf = Typeface.create(family, oldStyle);
+        int fake = oldStyle & ~tf.getStyle();
+
+        if ((fake & Typeface.BOLD) != 0) {
+            paint.setFakeBoldText(true);
         }
-    };
+
+        if ((fake & Typeface.ITALIC) != 0) {
+            paint.setTextSkewX(-0.25f);
+        }
+
+        paint.setTypeface(tf);
+    }
 
     @Override
     public int getStartBeforeCollapse() {

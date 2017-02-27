@@ -1,40 +1,73 @@
 package org.hypest.spansplayground;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.style.BulletSpan;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.text.Layout;
+import android.text.Spanned;
+import android.text.style.LeadingMarginSpan;
 
-class ListItemSpan extends BulletSpan implements ParagraphFlagged {
+class ListItemSpan implements ParagraphFlagged, LeadingMarginSpan {
+    private final int mGapWidth;
+    private final boolean mWantColor;
+    private final int mColor;
+
+    private static final int BULLET_RADIUS = 3;
+    private static Path sBulletPath = null;
+    static final int STANDARD_GAP_WIDTH = 2;
+
     private int mStartBeforeColapse = -1;
     private int mEndBeforeBleed = -1;
 
     ListItemSpan() {
-        super();
+        mGapWidth = STANDARD_GAP_WIDTH;
+        mWantColor = false;
+        mColor = 0;
     }
 
-    ListItemSpan(Parcel src) {
-        super(src);
+    @Override
+    public int getLeadingMargin(boolean first) {
+        return 2 * BULLET_RADIUS + mGapWidth;
     }
 
-    public int describeContents() {
-        return 0;
-    }
+    @Override
+    public void drawLeadingMargin(Canvas c, Paint p, int x, int dir,
+            int top, int baseline, int bottom,
+            CharSequence text, int start, int end,
+            boolean first, Layout l) {
+        if (((Spanned) text).getSpanStart(this) == start) {
+            Paint.Style style = p.getStyle();
+            int oldcolor = 0;
 
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-    }
+            if (mWantColor) {
+                oldcolor = p.getColor();
+                p.setColor(mColor);
+            }
 
-    public static final Parcelable.Creator<ListItemSpan> CREATOR = new Parcelable.Creator<ListItemSpan>() {
-        @Override
-        public ListItemSpan createFromParcel(Parcel in) {
-            return new ListItemSpan(in);
+            p.setStyle(Paint.Style.FILL);
+
+            if (c.isHardwareAccelerated()) {
+                if (sBulletPath == null) {
+                    sBulletPath = new Path();
+                    // Bullet is slightly better to avoid aliasing artifacts on mdpi devices.
+                    sBulletPath.addCircle(0.0f, 0.0f, 1.2f * BULLET_RADIUS, Path.Direction.CW);
+                }
+
+                c.save();
+                c.translate(x + dir * BULLET_RADIUS, (top + bottom) / 2.0f);
+                c.drawPath(sBulletPath, p);
+                c.restore();
+            } else {
+                c.drawCircle(x + dir * BULLET_RADIUS, (top + bottom) / 2.0f, BULLET_RADIUS, p);
+            }
+
+            if (mWantColor) {
+                p.setColor(oldcolor);
+            }
+
+            p.setStyle(style);
         }
-
-        @Override
-        public ListItemSpan[] newArray(int size) {
-            return new ListItemSpan[size];
-        }
-    };
+    }
 
     @Override
     public int getStartBeforeCollapse() {
